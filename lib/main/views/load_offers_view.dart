@@ -12,17 +12,7 @@ class LoadOffersView extends StatefulWidget {
 }
 
 class _LoadOffersViewState extends State<LoadOffersView> {
-  Viewer? viewer;
-
-  @override
-  void initState() {
-    doLoadOffersAsync();
-    super.initState();
-  }
-
-  Future<void> doLoadOffersAsync() async {
-    viewer = await makeGetOffers().getViewer();
-  }
+  Viewer viewer = Viewer();
 
   @override
   Widget build(BuildContext context) {
@@ -42,14 +32,26 @@ class _LoadOffersViewState extends State<LoadOffersView> {
           ),
           Padding(
             padding: EdgeInsets.fromLTRB(5, 140, 5, 2),
-            child: ListView.builder(
-              scrollDirection: Axis.vertical,
-              itemBuilder: (BuildContext context, int index) {
-                return OfferCard(
-                  offer: viewer?.offers?[index] ?? Offer(),
+            child: FutureBuilder(
+              future: makeGetOffers().getViewer(),
+              builder: (context, AsyncSnapshot? asyncSnapshot) {
+                if (asyncSnapshot?.data == null) {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                Viewer? _viewer = asyncSnapshot?.data;
+
+                return ListView.builder(
+                  itemBuilder: (BuildContext context, int index) {
+                    return OfferCard(
+                      offer: _viewer?.offers?[index] ?? Offer(),
+                    );
+                  },
+                  itemCount: _viewer?.offers?.length,
                 );
               },
-              itemCount: viewer?.offers?.length ?? 0,
             ),
           )
         ],
